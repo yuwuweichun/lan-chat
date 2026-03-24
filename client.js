@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const readline = require('readline');
+const { greet } = require('./greeter');
 
 const SERVER_IP = '10.232.111.189'; // ← server LAN IP
 const PORT = 8080;
@@ -18,50 +19,13 @@ const c = {
   gray:  '\x1b[90m',
 };
 
-const logo = [
-  `${c.cyan}${c.bold}  ██╗      █████╗  ███╗   ██╗     ██████╗ ██╗  ██╗  █████╗  ████████╗${c.reset}`,
-  `${c.cyan}${c.bold}  ██║     ██╔══██╗ ████╗  ██║    ██╔════╝ ██║  ██║ ██╔══██╗ ╚══██╔══╝${c.reset}`,
-  `${c.cyan}${c.bold}  ██║     ███████║ ██╔██╗ ██║    ██║      ███████║ ███████║    ██║    ${c.reset}`,
-  `${c.cyan}${c.bold}  ██║     ██╔══██║ ██║╚██╗██║    ██║      ██╔══██║ ██╔══██║    ██║    ${c.reset}`,
-  `${c.cyan}${c.bold}  ███████╗██║  ██║ ██║ ╚████║    ╚██████╗ ██║  ██║ ██║  ██║    ██║    ${c.reset}`,
-  `${c.cyan}${c.bold}  ╚══════╝╚═╝  ╚═╝ ╚═╝  ╚═══╝     ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝   ${c.reset}`,
-  `${c.gray}                         local-area-network chat${c.reset}`,
-  '',
-  `${c.gray}⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠶⠛⠋⠉⠐⠻⣷⣊⠉⠀⠀⠯⣔⠤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠈⠙⢤⣶⣋⣀⣀⠁⠀⠙⠢⣄⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣄⣀⡀⠀⠀⠁⠢⢄⠑⣤⡀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⢀⡼⠋⠀⡀⠀⠀⠀⠀⠀⠀⠀⢀⡠⠄⠀⠀⠀⠙⣄⠈⣙⠲⢤⡀⠀⠑⢌⣻⣄⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⢠⠎⠀⡠⡾⠀⠀⠀⠀⠀⢀⣤⠖⠉⠀⠀⠀⠀⣠⠖⠉⠣⠈⠑⠀⠈⠑⠄⠀⠉⢿⣦⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⣞⣠⠞⡰⠁⠀⠀⡀⣠⣾⠟⠁⠀⠀⠀⠀⢰⠞⠀⠀⡄⠀⡀⠘⣄⠀⠀⠢⡀⢀⠢⠙⣧⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⢸⣿⢇⡴⠁⠀⡆⠈⢠⡿⠛⢳⡄⢀⠇⠀⢠⠞⠀⠀⢰⠁⠀⢧⠀⢻⠱⣦⢰⡞⢧⣀⠀⠘⣧⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⡼⢡⣿⠃⠀⢠⡇⣰⠋⠀⢰⠏⢠⠏⠀⣰⠋⠀⠀⢠⡟⠀⠘⠀⠇⢸⠀⠈⢻⡳⡤⣈⣷⠀⠸⣆${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⢸⣷⣏⡇⠀⠀⢸⢠⢿⠟⠀⣏⡴⢃⡄⢠⠃⠀⠀⠀⢸⠃⠀⠀⠀⠀⢸⡇⠘⡇⠹⣼⠀⢻⠀⡄⢸${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠈⡟⢸⠁⣰⡇⣸⠘⢦⠤⢶⡏⢀⡼⡇⢸⠀⠀⠀⢀⡏⠀⠀⠀⠀⡀⣼⣧⠀⡇⠀⠈⣦⡼⠀⣇⢸${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⡇⠈⣰⠋⡇⡟⠀⠀⢰⣿⣁⡾⠁⢹⣼⣧⡇⠀⡜⠀⠀⣠⠆⣼⣰⢿⣿⢰⠇⠀⣸⠏⣰⢀⣿⣿${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⢣⣰⣿⡀⢹⣿⠀⠀⣾⣿⣿⣟⣒⣺⣿⢼⣧⣼⠁⣠⣶⠏⣰⣿⣯⣼⣿⣿⠀⣴⣯⣴⡿⣼⠹⡿${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⢻⣿⣧⢠⣿⡀⣸⡏⠿⢿⣿⣿⠙⠻⠆⣿⣧⣾⣿⣯⣴⣿⣿⡟⠻⣿⣷⣾⣿⣿⢿⣿⠃⢰⠇${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠹⣿⣧⡻⣇⣿⣿⣄⠀⠈⠁⠀⠀⣸⡿⢋⠟⣹⡿⠋⠛⠛⠁⢠⣿⣿⣿⣿⡇⣸⠃⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿⣿⣿⣮⡻⣷⢤⣀⠀⠸⠟⠁⠀⠜⠁⠀⠀⠀⣠⣶⣿⣿⣿⣿⣿⡇⠁⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⠿⠮⢽⣿⣦⡀⠁⠀⠀⠀⠀⣰⠄⠀⠈⢉⣡⣾⣿⣿⣿⣿⣿⠁⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠾⠉⠀⠀⠀⠀⠀⠉⢻⡶⠦⠀⠀⠄⠅⠀⠐⠚⣻⣿⣿⣿⣿⣿⢛⡏⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⢀⡴⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡒⠀⠀⠀⢀⣠⣶⣿⣿⣿⡿⠋⣿⠋⠘⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⢀⣠⠎⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣦⡤⠖⠉⠉⠟⣹⠟⠋⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⢀⠴⠊⣹⡟⠀⠀⣰⢾⣿⣷⣆⠀⠀⠀⠀⠀⢀⡿⠛⠃⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⢠⠎⠀⣰⣿⡇⠀⡷⣿⠿⠿⣟⣿⠀⠀⠀⠀⠀⣼⡁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⣠⣿⣿⡇⠀⢿⣮⣗⠒⠛⠁⠀⠀⠀⠀⠸⣿⣿⣦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠘⠛⠛⣿⣿⣿⡇⠀⠈⠣⠀⠀⠀⠀⠀⠀⢀⣄⣴⢿⣿⣿⡌⠑⠢⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⢸⡆⢸⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⡏⠀⠻⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-];
-
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   prompt: '  client> ',
 });
 
-logo.forEach(line => console.log(line));
-console.log(`\n  ${c.gray}[ CLIENT ]  connecting to ${SERVER_IP}:${PORT}...${c.reset}\n`);
+greet(`[ CLIENT ]  connecting to ${SERVER_IP}:${PORT}...`);
 
 ws.on('open', () => {
   process.stdout.write('\r\x1b[K');
@@ -90,6 +54,7 @@ rl.on('line', (input) => {
   if (!msg) { rl.prompt(); return; }
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(msg);
+    process.stdout.write('\x1b[1A\x1b[2K');
     console.log(`  ${c.gray}[${ts()}]${c.reset}  ${c.gold}you${c.reset}     ${msg}`);
   }
   rl.prompt();

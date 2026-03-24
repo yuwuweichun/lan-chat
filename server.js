@@ -1,5 +1,6 @@
 const { WebSocketServer } = require('ws');
 const readline = require('readline');
+const { greet } = require('./greeter');
 
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
@@ -17,50 +18,13 @@ const c = {
   gray:  '\x1b[90m',
 };
 
-const logo = [
-  `${c.cyan}${c.bold}  ██╗      █████╗  ███╗   ██╗     ██████╗ ██╗  ██╗  █████╗  ████████╗${c.reset}`,
-  `${c.cyan}${c.bold}  ██║     ██╔══██╗ ████╗  ██║    ██╔════╝ ██║  ██║ ██╔══██╗ ╚══██╔══╝${c.reset}`,
-  `${c.cyan}${c.bold}  ██║     ███████║ ██╔██╗ ██║    ██║      ███████║ ███████║    ██║    ${c.reset}`,
-  `${c.cyan}${c.bold}  ██║     ██╔══██║ ██║╚██╗██║    ██║      ██╔══██║ ██╔══██║    ██║    ${c.reset}`,
-  `${c.cyan}${c.bold}  ███████╗██║  ██║ ██║ ╚████║    ╚██████╗ ██║  ██║ ██║  ██║    ██║    ${c.reset}`,
-  `${c.cyan}${c.bold}  ╚══════╝╚═╝  ╚═╝ ╚═╝  ╚═══╝     ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝   ${c.reset}`,
-  `${c.gray}                         local-area-network chat${c.reset}`,
-  '',
-  `${c.gray}⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠶⠛⠋⠉⠐⠻⣷⣊⠉⠀⠀⠯⣔⠤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠈⠙⢤⣶⣋⣀⣀⠁⠀⠙⠢⣄⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣄⣀⡀⠀⠀⠁⠢⢄⠑⣤⡀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⢀⡼⠋⠀⡀⠀⠀⠀⠀⠀⠀⠀⢀⡠⠄⠀⠀⠀⠙⣄⠈⣙⠲⢤⡀⠀⠑⢌⣻⣄⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⢠⠎⠀⡠⡾⠀⠀⠀⠀⠀⢀⣤⠖⠉⠀⠀⠀⠀⣠⠖⠉⠣⠈⠑⠀⠈⠑⠄⠀⠉⢿⣦⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⣞⣠⠞⡰⠁⠀⠀⡀⣠⣾⠟⠁⠀⠀⠀⠀⢰⠞⠀⠀⡄⠀⡀⠘⣄⠀⠀⠢⡀⢀⠢⠙⣧⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⢸⣿⢇⡴⠁⠀⡆⠈⢠⡿⠛⢳⡄⢀⠇⠀⢠⠞⠀⠀⢰⠁⠀⢧⠀⢻⠱⣦⢰⡞⢧⣀⠀⠘⣧⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⡼⢡⣿⠃⠀⢠⡇⣰⠋⠀⢰⠏⢠⠏⠀⣰⠋⠀⠀⢠⡟⠀⠘⠀⠇⢸⠀⠈⢻⡳⡤⣈⣷⠀⠸⣆${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⢸⣷⣏⡇⠀⠀⢸⢠⢿⠟⠀⣏⡴⢃⡄⢠⠃⠀⠀⠀⢸⠃⠀⠀⠀⠀⢸⡇⠘⡇⠹⣼⠀⢻⠀⡄⢸${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠈⡟⢸⠁⣰⡇⣸⠘⢦⠤⢶⡏⢀⡼⡇⢸⠀⠀⠀⢀⡏⠀⠀⠀⠀⡀⣼⣧⠀⡇⠀⠈⣦⡼⠀⣇⢸${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⡇⠈⣰⠋⡇⡟⠀⠀⢰⣿⣁⡾⠁⢹⣼⣧⡇⠀⡜⠀⠀⣠⠆⣼⣰⢿⣿⢰⠇⠀⣸⠏⣰⢀⣿⣿${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⢣⣰⣿⡀⢹⣿⠀⠀⣾⣿⣿⣟⣒⣺⣿⢼⣧⣼⠁⣠⣶⠏⣰⣿⣯⣼⣿⣿⠀⣴⣯⣴⡿⣼⠹⡿${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⢻⣿⣧⢠⣿⡀⣸⡏⠿⢿⣿⣿⠙⠻⠆⣿⣧⣾⣿⣯⣴⣿⣿⡟⠻⣿⣷⣾⣿⣿⢿⣿⠃⢰⠇${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠹⣿⣧⡻⣇⣿⣿⣄⠀⠈⠁⠀⠀⣸⡿⢋⠟⣹⡿⠋⠛⠛⠁⢠⣿⣿⣿⣿⡇⣸⠃⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿⣿⣿⣮⡻⣷⢤⣀⠀⠸⠟⠁⠀⠜⠁⠀⠀⠀⣠⣶⣿⣿⣿⣿⣿⡇⠁⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⠿⠮⢽⣿⣦⡀⠁⠀⠀⠀⠀⣰⠄⠀⠈⢉⣡⣾⣿⣿⣿⣿⣿⠁⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠾⠉⠀⠀⠀⠀⠀⠉⢻⡶⠦⠀⠀⠄⠅⠀⠐⠚⣻⣿⣿⣿⣿⣿⢛⡏⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⢀⡴⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡒⠀⠀⠀⢀⣠⣶⣿⣿⣿⡿⠋⣿⠋⠘⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⠀⠀⢀⣠⠎⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣦⡤⠖⠉⠉⠟⣹⠟⠋⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⢀⠴⠊⣹⡟⠀⠀⣰⢾⣿⣷⣆⠀⠀⠀⠀⠀⢀⡿⠛⠃⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⢠⠎⠀⣰⣿⡇⠀⡷⣿⠿⠿⣟⣿⠀⠀⠀⠀⠀⣼⡁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠀⠀⠀⣠⣿⣿⡇⠀⢿⣮⣗⠒⠛⠁⠀⠀⠀⠀⠸⣿⣿⣦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⠘⠛⠛⣿⣿⣿⡇⠀⠈⠣⠀⠀⠀⠀⠀⠀⢀⣄⣴⢿⣿⣿⡌⠑⠢⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-  `${c.gray}      ⢸⡆⢸⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⡏⠀⠻⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
-];
-
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   prompt: '  server> ',
 });
 
-logo.forEach(line => console.log(line));
-console.log(`\n  ${c.gray}[ SERVER ]  port ${PORT}  ·  waiting for client...${c.reset}\n`);
+greet(`[ SERVER ]  port ${PORT}  ·  waiting for client...`);
 
 wss.on('connection', (ws) => {
   clients.add(ws);
@@ -90,6 +54,7 @@ rl.on('line', (input) => {
   clients.forEach(client => {
     if (client.readyState === 1) client.send(msg);
   });
+  process.stdout.write('\x1b[1A\x1b[2K');
   console.log(`  ${c.gray}[${ts()}]${c.reset}  ${c.gold}you${c.reset}     ${msg}`);
   rl.prompt();
 });
