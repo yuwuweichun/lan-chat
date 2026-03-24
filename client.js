@@ -1,42 +1,87 @@
 const WebSocket = require('ws');
 const readline = require('readline');
 
-const SERVER_IP = '10.232.111.189'; // ← 电脑的局域网 IP
+const SERVER_IP = '10.232.111.189'; // ← server LAN IP
 const PORT = 8080;
 
 const ws = new WebSocket(`ws://${SERVER_IP}:${PORT}`);
 
-const ts = () => new Date().toLocaleTimeString('zh-CN', { hour12: false });
+const ts = () => new Date().toLocaleTimeString('en-US', { hour12: false });
+
+const c = {
+  reset: '\x1b[0m',
+  bold:  '\x1b[1m',
+  cyan:  '\x1b[96m',
+  green: '\x1b[92m',
+  red:   '\x1b[91m',
+  gold:  '\x1b[33m',
+  gray:  '\x1b[90m',
+};
+
+const logo = [
+  `${c.cyan}${c.bold}  ██╗      █████╗  ███╗   ██╗     ██████╗ ██╗  ██╗  █████╗  ████████╗${c.reset}`,
+  `${c.cyan}${c.bold}  ██║     ██╔══██╗ ████╗  ██║    ██╔════╝ ██║  ██║ ██╔══██╗ ╚══██╔══╝${c.reset}`,
+  `${c.cyan}${c.bold}  ██║     ███████║ ██╔██╗ ██║    ██║      ███████║ ███████║    ██║    ${c.reset}`,
+  `${c.cyan}${c.bold}  ██║     ██╔══██║ ██║╚██╗██║    ██║      ██╔══██║ ██╔══██║    ██║    ${c.reset}`,
+  `${c.cyan}${c.bold}  ███████╗██║  ██║ ██║ ╚████║    ╚██████╗ ██║  ██║ ██║  ██║    ██║    ${c.reset}`,
+  `${c.cyan}${c.bold}  ╚══════╝╚═╝  ╚═╝ ╚═╝  ╚═══╝     ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝   ${c.reset}`,
+  `${c.gray}                         local-area-network chat${c.reset}`,
+  '',
+  `${c.gray}⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠶⠛⠋⠉⠐⠻⣷⣊⠉⠀⠀⠯⣔⠤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠈⠙⢤⣶⣋⣀⣀⠁⠀⠙⠢⣄⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣄⣀⡀⠀⠀⠁⠢⢄⠑⣤⡀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⢀⡼⠋⠀⡀⠀⠀⠀⠀⠀⠀⠀⢀⡠⠄⠀⠀⠀⠙⣄⠈⣙⠲⢤⡀⠀⠑⢌⣻⣄⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⢠⠎⠀⡠⡾⠀⠀⠀⠀⠀⢀⣤⠖⠉⠀⠀⠀⠀⣠⠖⠉⠣⠈⠑⠀⠈⠑⠄⠀⠉⢿⣦⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⣞⣠⠞⡰⠁⠀⠀⡀⣠⣾⠟⠁⠀⠀⠀⠀⢰⠞⠀⠀⡄⠀⡀⠘⣄⠀⠀⠢⡀⢀⠢⠙⣧⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⢸⣿⢇⡴⠁⠀⡆⠈⢠⡿⠛⢳⡄⢀⠇⠀⢠⠞⠀⠀⢰⠁⠀⢧⠀⢻⠱⣦⢰⡞⢧⣀⠀⠘⣧⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⡼⢡⣿⠃⠀⢠⡇⣰⠋⠀⢰⠏⢠⠏⠀⣰⠋⠀⠀⢠⡟⠀⠘⠀⠇⢸⠀⠈⢻⡳⡤⣈⣷⠀⠸⣆${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⢸⣷⣏⡇⠀⠀⢸⢠⢿⠟⠀⣏⡴⢃⡄⢠⠃⠀⠀⠀⢸⠃⠀⠀⠀⠀⢸⡇⠘⡇⠹⣼⠀⢻⠀⡄⢸${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠈⡟⢸⠁⣰⡇⣸⠘⢦⠤⢶⡏⢀⡼⡇⢸⠀⠀⠀⢀⡏⠀⠀⠀⠀⡀⣼⣧⠀⡇⠀⠈⣦⡼⠀⣇⢸${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⡇⠈⣰⠋⡇⡟⠀⠀⢰⣿⣁⡾⠁⢹⣼⣧⡇⠀⡜⠀⠀⣠⠆⣼⣰⢿⣿⢰⠇⠀⣸⠏⣰⢀⣿⣿${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⢣⣰⣿⡀⢹⣿⠀⠀⣾⣿⣿⣟⣒⣺⣿⢼⣧⣼⠁⣠⣶⠏⣰⣿⣯⣼⣿⣿⠀⣴⣯⣴⡿⣼⠹⡿${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⢻⣿⣧⢠⣿⡀⣸⡏⠿⢿⣿⣿⠙⠻⠆⣿⣧⣾⣿⣯⣴⣿⣿⡟⠻⣿⣷⣾⣿⣿⢿⣿⠃⢰⠇${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠹⣿⣧⡻⣇⣿⣿⣄⠀⠈⠁⠀⠀⣸⡿⢋⠟⣹⡿⠋⠛⠛⠁⢠⣿⣿⣿⣿⡇⣸⠃⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿⣿⣿⣮⡻⣷⢤⣀⠀⠸⠟⠁⠀⠜⠁⠀⠀⠀⣠⣶⣿⣿⣿⣿⣿⡇⠁⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⠿⠮⢽⣿⣦⡀⠁⠀⠀⠀⠀⣰⠄⠀⠈⢉⣡⣾⣿⣿⣿⣿⣿⠁⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠾⠉⠀⠀⠀⠀⠀⠉⢻⡶⠦⠀⠀⠄⠅⠀⠐⠚⣻⣿⣿⣿⣿⣿⢛⡏⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⠀⠀⢀⡴⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡒⠀⠀⠀⢀⣠⣶⣿⣿⣿⡿⠋⣿⠋⠘⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⠀⠀⢀⣠⠎⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣦⡤⠖⠉⠉⠟⣹⠟⠋⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⢀⠴⠊⣹⡟⠀⠀⣰⢾⣿⣷⣆⠀⠀⠀⠀⠀⢀⡿⠛⠃⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⢠⠎⠀⣰⣿⡇⠀⡷⣿⠿⠿⣟⣿⠀⠀⠀⠀⠀⣼⡁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠀⠀⠀⣠⣿⣿⡇⠀⢿⣮⣗⠒⠛⠁⠀⠀⠀⠀⠸⣿⣿⣦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⠘⠛⠛⣿⣿⣿⡇⠀⠈⠣⠀⠀⠀⠀⠀⠀⢀⣄⣴⢿⣿⣿⡌⠑⠢⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+  `${c.gray}      ⢸⡆⢸⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⡏⠀⠻⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀${c.reset}`,
+];
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
-  prompt: '  平板> '
+  prompt: '  client> ',
 });
 
-console.log('┌──────────────────────────┐');
-console.log('│   LAN Chat  ·  平板端     │');
-console.log('└──────────────────────────┘');
-console.log(`  连接至 ${SERVER_IP}:${PORT} ...\n`);
+logo.forEach(line => console.log(line));
+console.log(`\n  ${c.gray}[ CLIENT ]  connecting to ${SERVER_IP}:${PORT}...${c.reset}\n`);
 
 ws.on('open', () => {
-  console.log(`  [${ts()}] + 已连接到电脑\n`);
+  process.stdout.write('\r\x1b[K');
+  console.log(`\n  ${c.green}${c.bold}[${ts()}]  ●  connected to server${c.reset}\n`);
   rl.prompt();
 });
 
 ws.on('message', (data) => {
   process.stdout.write('\r\x1b[K');
-  console.log(`  [${ts()}] 电脑  ${data}`);
+  console.log(`  ${c.gray}[${ts()}]${c.reset}  ${c.cyan}server${c.reset}  ${data}`);
   rl.prompt();
 });
 
 ws.on('close', () => {
-  console.log(`\n  [${ts()}] - 连接已断开`);
+  console.log(`\n  ${c.red}${c.bold}[${ts()}]  ○  disconnected${c.reset}`);
   process.exit(0);
 });
 
 ws.on('error', (err) => {
-  console.error(`\n  连接失败: ${err.message}`);
+  console.error(`\n  ${c.red}connection failed: ${err.message}${c.reset}`);
   process.exit(1);
 });
 
@@ -45,6 +90,7 @@ rl.on('line', (input) => {
   if (!msg) { rl.prompt(); return; }
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(msg);
+    console.log(`  ${c.gray}[${ts()}]${c.reset}  ${c.gold}you${c.reset}     ${msg}`);
   }
   rl.prompt();
 });
