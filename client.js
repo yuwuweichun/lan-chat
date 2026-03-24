@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const readline = require('readline');
 const { greet } = require('./greeter');
+const { sendLyrics } = require('./lyrics');
 
 const SERVER_IP = '10.232.111.189'; // ← server LAN IP
 const PORT = 8080;
@@ -52,6 +53,16 @@ ws.on('error', (err) => {
 rl.on('line', (input) => {
   const msg = input.trim();
   if (!msg) { rl.prompt(); return; }
+  if (msg === '/lyrics') {
+    sendLyrics(line => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(line);
+        process.stdout.write('\x1b[1A\x1b[2K');
+        console.log(`  ${c.gray}[${ts()}]${c.reset}  ${c.gold}you${c.reset}     ${line}`);
+      }
+    }).then(() => rl.prompt());
+    return;
+  }
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(msg);
     process.stdout.write('\x1b[1A\x1b[2K');

@@ -1,6 +1,7 @@
 const { WebSocketServer } = require('ws');
 const readline = require('readline');
 const { greet } = require('./greeter');
+const { sendLyrics } = require('./lyrics');
 
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
@@ -51,6 +52,16 @@ rl.prompt();
 rl.on('line', (input) => {
   const msg = input.trim();
   if (!msg) { rl.prompt(); return; }
+  if (msg === '/lyrics') {
+    sendLyrics(line => {
+      clients.forEach(client => {
+        if (client.readyState === 1) client.send(line);
+      });
+      process.stdout.write('\x1b[1A\x1b[2K');
+      console.log(`  ${c.gray}[${ts()}]${c.reset}  ${c.gold}you${c.reset}     ${line}`);
+    }).then(() => rl.prompt());
+    return;
+  }
   clients.forEach(client => {
     if (client.readyState === 1) client.send(msg);
   });
